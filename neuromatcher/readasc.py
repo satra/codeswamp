@@ -26,7 +26,7 @@ def read_ASCbp(fname):
     names = []
     for line in open(fname,'rt'):
         if re.search(pattern, line):
-            xyz.append([float(val) for val in line.split()[1:4]])
+            xyz.append([float(val) for val in line.split(')')[0].split()[1:4]])
             names.append(line.split()[-1])
     xyz = np.array(xyz)
     names = np.array(names)
@@ -53,15 +53,21 @@ def plot3(xyz):
 ascfiles = glob('*.ASC')
 
 data = []
+fingerprints = np.zeros((128,len(ascfiles)))
 for idx, fname in enumerate(ascfiles):
     data.append(dict(name=fname))
     data[idx]['xyz'],data[idx]['nodenames'] = read_ASCbp(fname)
     xyzpc = PCA(data[idx]['xyz'])
     data[idx]['xyzpc'] = xyzpc.Y
     plt.gcf().add_subplot(3,len(ascfiles),idx+1, projection='3d')
+    plt.title(fname)
     plot3(data[idx]['xyzpc'])
     plt.subplot(3,len(ascfiles),len(ascfiles)+idx+1)
-    n,bins,_ = plt.hist(data[idx]['xyzpc'][:,0],bins=128,color=np.random.rand(1,3),normed=normed)
+    n,bins,_ = plt.hist(data[idx]['xyzpc'][:,0],bins=128, range=[-4,4],color=np.random.rand(1,3),normed=normed)
+    fingerprints[:,idx] = n
     plt.subplot(3,1,3)
     plt.hist(data[idx]['xyzpc'][:,0],bins=128,color=np.random.rand(1,3),alpha=0.5,normed=normed)
 
+plt.figure()
+plt.imshow(np.corrcoef(fingerprints.transpose()), interpolation='nearest')
+plt.colorbar()
