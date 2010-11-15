@@ -14,7 +14,7 @@ import numpy as np
 pattern = ';.*R' # use Root + R labels
 
 # set to True if you want a normed histogram (pdf sums to 1)
-normed=True
+normed=False
 
 
 def read_ASCbp(fname):
@@ -50,7 +50,7 @@ def plot3(xyz):
 
 
 # get all ASC files in the directory
-ascfiles = glob('*.ASC')
+ascfiles = sorted(glob('*z adj*.ASC') + glob('*flip.ASC'))
 
 data = []
 fingerprints = np.zeros((128,len(ascfiles)))
@@ -58,15 +58,18 @@ for idx, fname in enumerate(ascfiles):
     data.append(dict(name=fname))
     data[idx]['xyz'],data[idx]['nodenames'] = read_ASCbp(fname)
     xyzpc = PCA(data[idx]['xyz'])
+    #data[idx]['xyzpc'] = data[idx]['xyz']
     data[idx]['xyzpc'] = xyzpc.Y
+    axisidx = 0
     plt.gcf().add_subplot(3,len(ascfiles),idx+1, projection='3d')
     plt.title(fname)
     plot3(data[idx]['xyzpc'])
     plt.subplot(3,len(ascfiles),len(ascfiles)+idx+1)
-    n,bins,_ = plt.hist(data[idx]['xyzpc'][:,0],bins=128, range=[-4,4],color=np.random.rand(1,3),normed=normed)
-    fingerprints[:,idx] = n
+    #n,bins,_ = plt.hist(data[idx]['xyzpc'][:,axisidx],bins=128, range=[200,3200],color=np.random.rand(1,3),normed=normed)
+    n,bins,_ = plt.hist(data[idx]['xyzpc'][:,axisidx],bins=128, color=np.random.rand(1,3),normed=normed)
+    fingerprints[:,idx] = n/float(sum(n))
     plt.subplot(3,1,3)
-    plt.hist(data[idx]['xyzpc'][:,0],bins=128,color=np.random.rand(1,3),alpha=0.5,normed=normed)
+    plt.hist(data[idx]['xyzpc'][:,axisidx],bins=128,color=np.random.rand(1,3),alpha=0.5,normed=normed)
 
 plt.figure()
 plt.imshow(np.corrcoef(fingerprints.transpose()), interpolation='nearest')
